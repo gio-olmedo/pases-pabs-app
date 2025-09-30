@@ -40,7 +40,26 @@ document.addEventListener('DOMContentLoaded', function() {
 function checkAuthStatus() {
     const authToken = localStorage.getItem('authToken');
     if (authToken) {
-        showApp();
+        // Verificar si el token es válido
+        fetch('/api/protected', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showApp();
+            } else {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('username');
+                showLogin();
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            showLogin();
+        });
     } else {
         showLogin();
     }
@@ -53,32 +72,38 @@ async function handleLogin(e) {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    try{
-        const response = await fetch('/api/login', {
+    try {
+        const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ username, password })
         });
-        console.log(response);
 
         if (!response.ok) {
             throw new Error('Credenciales inválidas');
         }
         
         const data = await response.json();
-    }catch (error) {
-        showError();
         
+        // Guardar token
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('username', data.username);
+        
+        hideError();
+        showApp();
+        
+    } catch (error) {
+        console.error('Error en login:', error);
+        showError();
     }
-    hideError();
-    showApp();
 }
 
 // Manejar logout
 function handleLogout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('username');
     isAuthenticated = false;
     resetForm();
     showLogin();
@@ -144,7 +169,14 @@ async function handleSubmit(e) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                folio: formData.folio,
+                fecha: formData.fecha,
+                tipoPersona: formData.tipoUsuario,
+                nombreTitular: formData.nombreTitular,
+                tipoPaciente: formData.relacionPaciente,
+                nombrePaciente: formData.nombrePaciente
+            })
         });
 
         if (!response.ok) {
