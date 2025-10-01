@@ -5,15 +5,17 @@ const { User } = require('../entities/User');
 const { JWT_SECRET, BCRYPT_ROUNDS, TOKEN_EXPIRATION } = require('../config/constants');
 
 class AuthService {
-    static async registerUser(username, password) {
+    constructor(userRepository = null) {
+        this.userRepository = userRepository || AppDataSource.getRepository(User);
+    }
+
+    async registerUser(username, password) {
         if (!username || !password) {
             throw new Error('Username y password son requeridos');
         }
-
-        const userRepository = AppDataSource.getRepository(User);
         
         // Verificar si el usuario ya existe
-        const existingUser = await userRepository.findOne({ where: { username } });
+        const existingUser = await this.userRepository.findOne({ where: { username } });
         if (existingUser) {
             throw new Error('El usuario ya existe');
         }
@@ -22,22 +24,21 @@ class AuthService {
         const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         // Crear nuevo usuario
-        const newUser = userRepository.create({
+        const newUser = this.userRepository.create({
             username,
             password: hashedPassword
         });
 
-        await userRepository.save(newUser);
+        await this.userRepository.save(newUser);
         return { message: 'Usuario creado exitosamente' };
     }
 
-    static async loginUser(username, password) {
+    async loginUser(username, password) {
         if (!username || !password) {
             throw new Error('Username y password son requeridos');
         }
 
-        const userRepository = AppDataSource.getRepository(User);
-        const user = await userRepository.findOne({ where: { username } });
+        const user = await this.userRepository.findOne({ where: { username } });
 
         if (!user) {
             throw new Error('Credenciales inválidas');
@@ -60,4 +61,16 @@ class AuthService {
     }
 }
 
-module.exports = { AuthService };
+// Factory function para crear una instancia con dependencias inyectadas
+const createAuthService = (userRepository = null) => {
+    return new AuthService(userRepository);
+};
+
+// Exportar tanto la clase como una instancia por defecto para compatibilidad
+const authServiceInstance = new AuthService();
+
+module.exports = { 
+    AuthService, 
+    createAuthService,
+    authService: authServiceInstance 
+};

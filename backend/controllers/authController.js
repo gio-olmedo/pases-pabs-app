@@ -1,10 +1,10 @@
-const { AuthService } = require('../services/authService');
+const { authService } = require('../services/authService');
 
 class AuthController {
     static async register(req, res) {
         try {
             const { username, password } = req.body;
-            const result = await AuthService.registerUser(username, password);
+            const result = await authService.registerUser(username, password);
             res.status(201).json(result);
         } catch (error) {
             console.error('Error al registrar usuario:', error);
@@ -21,7 +21,7 @@ class AuthController {
     static async login(req, res) {
         try {
             const { username, password } = req.body;
-            const result = await AuthService.loginUser(username, password);
+            const result = await authService.loginUser(username, password);
             res.json(result);
         } catch (error) {
             console.error('Error al hacer login:', error);
