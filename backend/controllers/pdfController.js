@@ -7,7 +7,7 @@ class PDFController {
             const username = req.user.username;
 
             // Generar el PDF usando el servicio
-            const doc = PDFService.generatePaseMedico(pdfData, username);
+            const doc = PDFService.generatePaseMedicov2(pdfData, username);
             
             // Configurar headers para descarga
             res.setHeader('Content-Type', 'application/pdf');
