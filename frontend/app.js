@@ -13,12 +13,8 @@ const loadingState = document.getElementById('loadingState');
 const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
 const errorText = document.getElementById('errorText');
+const submitBtn = document.getElementById('submitBtn');
 
-// Credenciales simples (en producción esto debería ser más seguro)
-const validCredentials = {
-    username: 'admin',
-    password: 'pases123'
-};
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutBtn.addEventListener('click', handleLogout);
     paseForm.addEventListener('submit', handleSubmit);
     resetFormBtn.addEventListener('click', resetForm);
+
+    // Event listeners para validación del formulario
+    setupFormValidation();
 
     // Verificar si ya está autenticado
     checkAuthStatus();
@@ -253,6 +252,64 @@ function resetForm() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('fecha').value = today;
     hideMessages();
+    validateForm(); // Revalidar después de resetear
+}
+
+// Configurar validación del formulario
+function setupFormValidation() {
+    const formElements = [
+        document.getElementById('fecha'),
+        document.getElementById('nombreTitular'),
+        document.getElementById('nombrePaciente')
+    ];
+
+    const radioGroups = [
+        document.getElementsByName('tipoUsuario'),
+        document.getElementsByName('relacionPaciente')
+    ];
+
+    // Event listeners para campos de texto
+    formElements.forEach(element => {
+        if (element) {
+            element.addEventListener('input', validateForm);
+            element.addEventListener('blur', validateForm);
+        }
+    });
+
+    // Event listeners para radio buttons
+    radioGroups.forEach(group => {
+        Array.from(group).forEach(radio => {
+            radio.addEventListener('change', validateForm);
+        });
+    });
+
+    // Validación inicial
+    validateForm();
+}
+
+// Validar formulario completo
+function validateForm() {
+    const fecha = document.getElementById('fecha').value.trim();
+    const nombreTitular = document.getElementById('nombreTitular').value.trim();
+    const nombrePaciente = document.getElementById('nombrePaciente').value.trim();
+    const tipoUsuario = document.querySelector('input[name="tipoUsuario"]:checked');
+    const relacionPaciente = document.querySelector('input[name="relacionPaciente"]:checked');
+
+    const isValid = fecha && nombreTitular && nombrePaciente && tipoUsuario && relacionPaciente;
+
+    if (submitBtn) {
+        submitBtn.disabled = !isValid;
+        
+        if (isValid) {
+            submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
+        } else {
+            submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
+            submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        }
+    }
+
+    return isValid;
 }
 
 // Validación adicional en tiempo real
@@ -265,10 +322,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Capitalizar nombres
     document.getElementById('nombreTitular').addEventListener('input', function(e) {
         this.value = capitalizeWords(this.value);
+        validateForm(); // Revalidar después de capitalizar
     });
 
     document.getElementById('nombrePaciente').addEventListener('input', function(e) {
         this.value = capitalizeWords(this.value);
+        validateForm(); // Revalidar después de capitalizar
     });
 });
 
