@@ -153,7 +153,7 @@ async function handleSubmit(e) {
 
     // Recopilar datos del formulario
     const formData = {
-        folio: document.getElementById('folio').value,
+        // folio: document.getElementById('folio').value,
         fecha: document.getElementById('fecha').value,
         tipoUsuario: document.querySelector('input[name="tipoUsuario"]:checked').value,
         nombreTitular: document.getElementById('nombreTitular').value,
@@ -170,7 +170,7 @@ async function handleSubmit(e) {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             },
             body: JSON.stringify({
-                folio: formData.folio,
+                // folio: formData.folio,
                 fecha: formData.fecha,
                 tipoPersona: formData.tipoUsuario,
                 nombreTitular: formData.nombreTitular,
@@ -191,7 +191,7 @@ async function handleSubmit(e) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `pase-medico-${formData.folio}-${formData.fecha}.pdf`;
+        a.download = `pase-medico-${formData.fecha}.pdf`;
         
         // Agregar al DOM y hacer click para descargar
         document.body.appendChild(a);
@@ -257,10 +257,10 @@ function resetForm() {
 
 // Validación adicional en tiempo real
 document.addEventListener('DOMContentLoaded', function() {
-    // Validar folio (solo números y letras)
-    document.getElementById('folio').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
-    });
+    //  Validar folio (solo números y letras)
+    // document.getElementById('folio').addEventListener('input', function(e) {
+    //     this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
+    // });
 
     // Capitalizar nombres
     document.getElementById('nombreTitular').addEventListener('input', function(e) {
