@@ -20,7 +20,7 @@ const User = new EntitySchema({
         },
         createdAt: {
             type: 'datetime',
-            createDate: true
+            default: () => 'CURRENT_TIMESTAMP'
         }
     }
 });

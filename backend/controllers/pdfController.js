@@ -1,4 +1,4 @@
-const { PDFService } = require('../services/pdfService');
+const { pdfService } = require('../services/pdfService');
 
 class PDFController {
     static async generatePDF(req, res) {
@@ -7,7 +7,8 @@ class PDFController {
             const username = req.user.username;
 
             // Generar el PDF usando el servicio
-            const doc = PDFService.generatePaseMedicov2(pdfData, username);
+            // return await pdfService.generatePaseMedicov2(pdfData, username);
+            const doc = await pdfService.generatePaseMedicov2(pdfData, username);
             
             // Configurar headers para descarga
             res.setHeader('Content-Type', 'application/pdf');

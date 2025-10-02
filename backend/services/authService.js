@@ -50,6 +50,7 @@ class AuthService {
             throw new Error('Credenciales inválidas');
         }
 
+        // console.log(JWT_SECRET);
         // Generar JWT
         const token = jwt.sign(
             { id: user.id, username: user.username },

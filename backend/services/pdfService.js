@@ -1,11 +1,18 @@
 const PDFDocument = require('pdfkit');
 const authService = require('./authService');
+const { foliosService } = require('./folioService');
+const QRCode = require('qrcode');
+const { APP_URL } = require('../config/constants');
 
 class PDFService {
-    static validatePDFData(data) {
-        const { folio, fecha, tipoPersona, nombreTitular, tipoPaciente, nombrePaciente } = data;
+    constructor(folioService = null) {
+        this.folioService = folioService || foliosService;
+    }
 
-        if (!folio || !fecha || !tipoPersona || !nombreTitular || !tipoPaciente || !nombrePaciente) {
+    validatePDFData(data) {
+        const { fecha, tipoPersona, nombreTitular, tipoPaciente, nombrePaciente } = data;
+
+        if (!fecha || !tipoPersona || !nombreTitular || !tipoPaciente || !nombrePaciente) {
             throw new Error('Todos los campos son requeridos');
         }
 
@@ -20,7 +27,7 @@ class PDFService {
         return true;
     }
 
-    static generatePaseMedico(data, username) {
+    async generatePaseMedico(data, username) {
         this.validatePDFData(data);
 
         const {
@@ -66,18 +73,22 @@ class PDFService {
         return doc;
     }
 
-    static generatePaseMedicov2(data, username) {
-        // this.validatePDFData(data);
+    async generatePaseMedicov2(data, username) {
+        this.validatePDFData(data);
+        const response = await foliosService.generateFolio();
         let auxHeight = 0;
 
         const datos = {
-            folio: data.folio,
+            folio: response.folio,
+            hash: response.hash,
             fecha: data.fecha,
             esEmpleado: data.tipoPersona === 'empleado',
             nombreTitular: data.nombreTitular,
             tipoPaciente: data.tipoPaciente,
             nombrePaciente: data.nombrePaciente
         };
+        const qr = await this.generarQR(datos.hash);
+        // console.log('QR generado:', qr);
         // ---------------------------------------------
 
         // Tamaño: media hoja carta en puntos (72 pt = 1 in)
@@ -175,16 +186,31 @@ class PDFService {
         doc.text('Cuide su salud y la de sus compañeros. Si tiene alguna molestia no se automedique, acuda a la sanidad del campamento.', 28, auxHeight, { width: width - 56 });
 
         auxHeight = empleadoY;
-        auxHeight += 50;
+        auxHeight += 60;
         // Opcional: área para sello / firma a la derecha inferior
         doc.rect(width - 160, auxHeight, 130, 60).stroke();
         auxHeight += 40;
         doc.fontSize(9).font('Helvetica').text('Sello/Firma', width - 120, auxHeight);
 
+        auxHeight -= 155;
+        doc.image(qr, width - 145, auxHeight, { width: 100 });
+
         // Finaliza
         // doc.end();
+        this.folioService.registerFolio(datos, username);
         return doc;
     }
-}
 
-module.exports = { PDFService };
+    async generarQR(text) {
+        const appUrl = APP_URL;
+        const fullText = appUrl + text;
+        let base64Qr = (await QRCode.toDataURL(fullText));
+        return base64Qr;
+    }
+}
+const pdfServiceInstance = new PDFService();
+
+module.exports = {
+    PDFService,
+    pdfService: pdfServiceInstance
+};
