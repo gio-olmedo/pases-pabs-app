@@ -21,10 +21,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/folios', foliosRoutes);
 app.use('/api', pdfRoutes);
 
-// Ruta para servir el frontend
+// Rutas para servir el frontend
+app.get('/verify/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/verify.html'));
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
+
 
 // Inicializar base de datos y servidor
 AppDataSource.initialize()
