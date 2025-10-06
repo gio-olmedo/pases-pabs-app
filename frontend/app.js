@@ -361,7 +361,8 @@ async function handleSubmit(e) {
 
         // Mostrar éxito
         showSuccess();
-
+        initFoliosTable();
+        resetForm();
     } catch (error) {
         console.error('Error al generar PDF:', error);
         showErrorMessage(error.message || 'Error al generar el PDF. Verifique la conexión con el servidor.');
