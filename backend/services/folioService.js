@@ -59,6 +59,15 @@ class FolioService {
         });
         await this.folioRepository.save(newFolio);
     }
+
+    async deactivateFolio(id) {
+        const folio = await this.folioRepository.findOneBy({ id });
+        if (!folio) {
+            throw new Error('Folio no encontrado');
+        }
+        folio.activo = false;
+        await this.folioRepository.save(folio);
+    }
 }
 const folioServiceInstance = new FolioService();
 

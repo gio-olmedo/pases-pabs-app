@@ -36,6 +36,16 @@ class FolioController {
             res.status(500).json({ error: 'Error searching for folio by hash' });
         }
     }
+
+    static async deactivateFolio(req, res) {    
+        const { id } = req.params;
+        try {
+            await foliosService.deactivateFolio(id);
+            res.json({ message: 'Folio deactivated successfully' });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = { FolioController };

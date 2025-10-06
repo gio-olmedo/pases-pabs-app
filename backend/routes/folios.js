@@ -7,6 +7,7 @@ const router = express.Router();
 // Ruta para generar PDF (requiere autenticación)
 router.get('/', authenticateToken, FolioController.index);
 router.get('/search/:folio', authenticateToken, FolioController.search);
+router.post('/deactivate/:id', authenticateToken, FolioController.deactivateFolio);
 
 //Rutas públicas
 router.get('/by-hash/:hash', FolioController.byHash);
