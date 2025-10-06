@@ -65,7 +65,10 @@ class FolioService {
         if (!folio) {
             throw new Error('Folio no encontrado');
         }
-        folio.activo = false;
+        if(folio.fechaDesactivacion) {
+            throw new Error('Folio ya está desactivado');
+        }
+        folio.fechaDesactivacion = new Date();
         await this.folioRepository.save(folio);
     }
 }

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     resetFormBtn.addEventListener('click', resetForm);
     viewRecordsBtn.addEventListener('click', handleViewRecords);
     searchInput.addEventListener('input', handleSearch);
-    searchInput.addEventListener('keydown', function(e) {
+    searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace') {
             handleSearch();
         }
@@ -171,26 +171,77 @@ async function getFolios() {
     }
 }
 
+function initDeactivateButtons() {
+    const deactivateButtons = document.querySelectorAll('[id^="deactivateBtn-"]');
+    console.log('Botones de desactivar encontrados:', deactivateButtons.length);
+    deactivateButtons.forEach(button => {
+        button.addEventListener('click', handleDeactivateFolio);
+    });
+}
+
 async function initFoliosTable() {
-    const folios = await getFolios(); 
+    const folios = await getFolios();
     fillData(folios);
 }
 
 function fillData(folios) {
     recordsTableBody.innerHTML = ''; // Limpiar tabla
-    folios.forEach((folio, i) =>  { 
+    folios.forEach((folio, i) => {
         const row = document.createElement('tr');
         row.classList.add('bg-white', 'border-b', 'hover:bg-gray-50');
+
+        const isActive = !folio.fechaDesactivacion;
+        const statusBadge = isActive
+            ? '<span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">Activo</span>'
+            : '<span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded">Desactivado</span>';
 
         row.innerHTML = `
             <td class="px-6 py-4">${folio.folio}</td>
             <td class="px-6 py-4">${folio.tipoPaciente}</td>
             <td class="px-6 py-4">${folio.nombrePaciente}</td>
             <td class="px-6 py-4">${folio.nombreTitular}</td>
+            <td class="px-6 py-4">${statusBadge}</td>
             <td class="px-6 py-4">${folio.fecha}</td>
+            <td class="px-6 py-4">
+                ${isActive ? `<button id="deactivateBtn-${folio.id}" class="deactivateBtn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded" data-id="${folio.id}"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </td>
         `;
         recordsTableBody.appendChild(row);
     });
+    initDeactivateButtons();
+}
+
+async function deactivateFolio(folioId) {
+    try {
+        const response = await fetch(`/api/folios/deactivate/${folioId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al desactivar folio');
+        }
+
+        // Refrescar tabla
+        handleSearch(); // Si hay búsqueda activa, refresca con el término actual
+        showSuccess();
+
+    } catch (error) {
+        console.error('Error al desactivar folio:', error);
+        showErrorMessage('Error al desactivar folio. Verifique la conexión con el servidor.');
+    }
+}
+
+async function handleDeactivateFolio(e) {
+    const button = e.currentTarget;
+    const folioId = button.getAttribute('data-id');
+    console.log('ID del folio a desactivar:', folioId);
+    if (confirm('¿Está seguro de que desea desactivar este folio? Esta acción no se puede deshacer.')) {
+        await deactivateFolio(folioId);
+    }
 }
 
 // Manejar logout

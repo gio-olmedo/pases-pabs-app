@@ -42,9 +42,10 @@ const Folios = new EntitySchema({
             length: 50,
             nullable: true
         },
-        activo :{
-            type: 'boolean',
-            default: true
+        fechaDesactivacion: {
+            type: 'datetime',
+            nullable: true,
+            default: null
         },
         createdAt: {
             type: 'datetime',

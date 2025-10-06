@@ -203,7 +203,7 @@ class PDFService {
 
     async generarQR(text) {
         const appUrl = APP_URL;
-        const fullText = appUrl + text;
+        const fullText = appUrl + '/verify/' + text;
         let base64Qr = (await QRCode.toDataURL(fullText));
         return base64Qr;
     }

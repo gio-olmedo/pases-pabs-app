@@ -105,9 +105,15 @@
                 </div>
                 
                 <!-- Status Badge -->
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md text-center mb-6">
+                <div id="validBadge" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md text-center mb-6">
                     <i class="fas fa-check-circle text-xl mr-2"></i>
                     <span class="font-semibold">Folio Válido y Verificado</span>
+                </div>
+
+                <div id="invalidBadge" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center mb-6 hidden">
+                    <i class="fas fa-times-circle text-xl mr-2"></i>
+                    <span class="font-semibold">Folio Inválido o No Verificado</span>
+                    <span id="fechaDesactivado" class="font-semibold"></span>
                 </div>
                 
                 <!-- Hash Information -->
@@ -175,6 +181,16 @@
             document.getElementById('usuario-registro').textContent = folio.usuarioRegistro;
             document.getElementById('created-at').textContent = formatDateTime(folio.createdAt);
             document.getElementById('hash-value').textContent = folio.hash;
+
+            // Mostrar badge según el estado del folio
+            if (!folio.fechaDesactivacion) {
+                document.getElementById('validBadge').classList.remove('hidden');
+                document.getElementById('invalidBadge').classList.add('hidden');
+            } else {
+                document.getElementById('validBadge').classList.add('hidden');
+                document.getElementById('invalidBadge').classList.remove('hidden');
+                document.getElementById('fechaDesactivado').textContent = ` - Desactivado el ${formatDate(folio.fechaDesactivacion)}`;
+            }
         }
 
         // Función para hacer la consulta a la API
