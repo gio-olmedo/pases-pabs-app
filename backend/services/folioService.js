@@ -18,7 +18,7 @@ class FolioService {
     async search(term) {
         return await this.folioRepository.find({ 
             where: [
-            { folio: term }, 
+            { folio: Like(`%${term}%`) }, 
             { hash: term },
             { nombreTitular: Like(`%${term}%`) },
             { nombrePaciente: Like(`%${term}%`) }

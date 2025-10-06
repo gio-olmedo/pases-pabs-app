@@ -1,23 +1,42 @@
 // Estado de la aplicación
 let isAuthenticated = false;
 
-// Referencias a elementos del DOM
+/* Referencias a elementos del DOMc */
+//Seccciones
 const loginSection = document.getElementById('loginSection');
+const listUsersSection = document.getElementById('listUsersSection');
 const appSection = document.getElementById('appSection');
+const formSection = document.getElementById('formSection');
+
+// Formulario de login
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
+
+// Botones de navegación
 const logoutBtn = document.getElementById('logoutBtn');
+const viewRecordsBtn = document.getElementById('viewRecordsBtn');
+
+// Formulario de pase
 const paseForm = document.getElementById('paseForm');
+const submitBtn = document.getElementById('submitBtn');
 const resetFormBtn = document.getElementById('resetForm');
+
 const loadingState = document.getElementById('loadingState');
 const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
 const errorText = document.getElementById('errorText');
-const submitBtn = document.getElementById('submitBtn');
+
+const menuText = document.getElementById('menuText');
+
+// Tabla de Registros
+const recordsTableBody = document.getElementById('recordsTableBody');
+const searchInput = document.getElementById('searchInput');
+// const searchBtn = document.getElementById('searchBtn');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
 
 
 // Inicialización
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Configurar fecha actual
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('fecha').value = today;
@@ -27,6 +46,15 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutBtn.addEventListener('click', handleLogout);
     paseForm.addEventListener('submit', handleSubmit);
     resetFormBtn.addEventListener('click', resetForm);
+    viewRecordsBtn.addEventListener('click', handleViewRecords);
+    searchInput.addEventListener('input', handleSearch);
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace') {
+            handleSearch();
+        }
+    });
+    clearSearchBtn.addEventListener('click', handleClearSearch);
+    // searchBtn.addEventListener('click', handleSearch);
 
     // Event listeners para validación del formulario
     setupFormValidation();
@@ -40,25 +68,25 @@ function checkAuthStatus() {
     const authToken = localStorage.getItem('authToken');
     if (authToken) {
         // Verificar si el token es válido
-        fetch('/api/protected', {
+        fetch('/api/auth/protected', {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         })
-        .then(response => {
-            if (response.ok) {
-                showApp();
-            } else {
+            .then(response => {
+                if (response.ok) {
+                    showApp();
+                } else {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('username');
+                    showLogin();
+                }
+            })
+            .catch(() => {
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('username');
                 showLogin();
-            }
-        })
-        .catch(() => {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('username');
-            showLogin();
-        });
+            });
     } else {
         showLogin();
     }
@@ -67,7 +95,7 @@ function checkAuthStatus() {
 // Manejar login
 async function handleLogin(e) {
     e.preventDefault();
-    
+
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
@@ -83,20 +111,86 @@ async function handleLogin(e) {
         if (!response.ok) {
             throw new Error('Credenciales inválidas');
         }
-        
+
         const data = await response.json();
-        
+
         // Guardar token
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('username', data.username);
-        
+
         hideError();
         showApp();
-        
+
     } catch (error) {
         console.error('Error en login:', error);
         showError();
     }
+}
+async function searchFolios(query) {
+    try {
+        const response = await fetch(`/api/folios/search/${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al buscar folios');
+        }
+
+        const data = await response.json();
+        return data; // 👈 ahora sí devuelve el array de folios
+    } catch (error) {
+        console.error('Error al buscar folios:', error);
+        return [];
+    }
+}
+
+async function getFolios() {
+    try {
+        const response = await fetch('/api/folios', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al obtener folios');
+        }
+
+        const data = await response.json();
+        return data; // 👈 ahora sí devuelve el array de folios
+    } catch (error) {
+        console.error('Error al obtener folios:', error);
+        showErrorMessage('Error al obtener folios. Verifique la conexión con el servidor.');
+        return []; // 👈 así evitas que sea undefined
+    }
+}
+
+async function initFoliosTable() {
+    const folios = await getFolios(); 
+    fillData(folios);
+}
+
+function fillData(folios) {
+    recordsTableBody.innerHTML = ''; // Limpiar tabla
+    folios.forEach((folio, i) =>  { 
+        const row = document.createElement('tr');
+        row.classList.add('bg-white', 'border-b', 'hover:bg-gray-50');
+
+        row.innerHTML = `
+            <td class="px-6 py-4">${folio.folio}</td>
+            <td class="px-6 py-4">${folio.tipoPaciente}</td>
+            <td class="px-6 py-4">${folio.nombrePaciente}</td>
+            <td class="px-6 py-4">${folio.nombreTitular}</td>
+            <td class="px-6 py-4">${folio.fecha}</td>
+        `;
+        recordsTableBody.appendChild(row);
+    });
 }
 
 // Manejar logout
@@ -108,10 +202,23 @@ function handleLogout() {
     showLogin();
 }
 
+function handleViewRecords() {
+    if (menuText.textContent === 'Ver Registros') {
+        menuText.textContent = 'Volver al Formulario';
+        formSection.classList.add('hidden');
+        listUsersSection.classList.remove('hidden');
+    } else {
+        menuText.textContent = 'Ver Registros';
+        formSection.classList.remove('hidden');
+        listUsersSection.classList.add('hidden');
+    }
+}
+
 // Mostrar pantalla de login
 function showLogin() {
     loginSection.classList.remove('hidden');
     appSection.classList.add('hidden');
+    listUsersSection.classList.add('hidden');
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
     hideError();
@@ -119,6 +226,7 @@ function showLogin() {
 
 // Mostrar aplicación principal
 function showApp() {
+    initFoliosTable()
     loginSection.classList.add('hidden');
     appSection.classList.remove('hidden');
     isAuthenticated = true;
@@ -140,7 +248,7 @@ function hideError() {
 // Manejar envío del formulario
 async function handleSubmit(e) {
     e.preventDefault();
-    
+
     if (!isAuthenticated) {
         alert('Debe estar autenticado para realizar esta acción');
         return;
@@ -184,31 +292,50 @@ async function handleSubmit(e) {
 
         // Obtener el blob del PDF
         const blob = await response.blob();
-        
+
         // Crear URL para descarga
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = `pase-medico-${formData.fecha}.pdf`;
-        
+
         // Agregar al DOM y hacer click para descargar
         document.body.appendChild(a);
         a.click();
-        
+
         // Limpiar
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         // Mostrar éxito
         showSuccess();
-        
+
     } catch (error) {
         console.error('Error al generar PDF:', error);
         showErrorMessage(error.message || 'Error al generar el PDF. Verifique la conexión con el servidor.');
     } finally {
         hideLoading();
     }
+}
+
+async function handleSearch() {
+    const query = searchInput.value.trim();
+    switch (query.length) {
+        case 0:
+            return initFoliosTable();
+        case 1:
+        case 2:
+        case 3:
+            return; // No hacer nada para menos de 4 caracteres
+    }
+    const folios = await searchFolios(query);
+    fillData(folios);
+}
+
+async function handleClearSearch() {
+    searchInput.value = '';
+    initFoliosTable();
 }
 
 // Mostrar estado de carga
@@ -299,7 +426,7 @@ function validateForm() {
 
     if (submitBtn) {
         submitBtn.disabled = !isValid;
-        
+
         if (isValid) {
             submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
             submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
@@ -313,19 +440,19 @@ function validateForm() {
 }
 
 // Validación adicional en tiempo real
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     //  Validar folio (solo números y letras)
     // document.getElementById('folio').addEventListener('input', function(e) {
     //     this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
     // });
 
     // Capitalizar nombres
-    document.getElementById('nombreTitular').addEventListener('input', function(e) {
+    document.getElementById('nombreTitular').addEventListener('input', function (e) {
         this.value = capitalizeWords(this.value);
         validateForm(); // Revalidar después de capitalizar
     });
 
-    document.getElementById('nombrePaciente').addEventListener('input', function(e) {
+    document.getElementById('nombrePaciente').addEventListener('input', function (e) {
         this.value = capitalizeWords(this.value);
         validateForm(); // Revalidar después de capitalizar
     });
@@ -333,16 +460,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función auxiliar para capitalizar palabras
 function capitalizeWords(str) {
-    return str.replace(/\w\S*/g, function(txt) {
+    return str.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 
 // Manejo de errores de red
-window.addEventListener('online', function() {
+window.addEventListener('online', function () {
     console.log('Conexión restaurada');
 });
 
-window.addEventListener('offline', function() {
+window.addEventListener('offline', function () {
     showErrorMessage('Sin conexión a internet. Verifique su conectividad.');
 });
