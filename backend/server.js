@@ -8,7 +8,7 @@ const { PORT } = require('./config/constants');
 // Importar rutas
 const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdf');
-
+const foliosRoutes = require('./routes/folios');
 const app = express();
 
 // Middleware
@@ -18,6 +18,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Configurar rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/folios', foliosRoutes);
 app.use('/api', pdfRoutes);
 
 // Ruta para servir el frontend

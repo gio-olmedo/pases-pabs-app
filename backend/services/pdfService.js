@@ -121,9 +121,9 @@ class PDFService {
         doc.fontSize(10).font('Helvetica-Bold');
         // doc.text('Pluspetrol', 28, 20); // placeholder logo texto
         doc.image('backend/assets/pabs.png', 28, 18, { width: 50 });
-        doc.fontSize(22).text('Pase Médico', width / 2 - 70, 18, { continued: false });
+        doc.fontSize(22).text('Pase Médico', 0, 18, { continued: false, align: 'center' });
         const subtitle = 'Titular: ' + (datos.nombreTitular || '');
-        doc.fontSize(12).text(subtitle, width / 2 - 75, 46);
+        doc.fontSize(12).text(subtitle, 0, 46, { align: 'center' });
 
         // Número de folio en esquina derecha
         doc.fontSize(10).font('Helvetica');

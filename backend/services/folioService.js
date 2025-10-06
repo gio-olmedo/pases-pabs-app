@@ -1,10 +1,33 @@
 const Crypto = require('crypto');
 const { AppDataSource } = require('../config/database');
 const { Folios } = require('../entities/Folios');
+const { Like } = require('typeorm');
 
 class FolioService {
     constructor(folioRepository = null) {
         this.folioRepository = folioRepository || AppDataSource.getRepository(Folios);
+    }
+
+    async index() {
+        return await this.folioRepository.find({
+            order: { createdAt: 'DESC' },
+            limit: 20
+        });
+    }
+
+    async search(term) {
+        return await this.folioRepository.find({ 
+            where: [
+            { folio: term }, 
+            { hash: term },
+            { nombreTitular: Like(`%${term}%`) },
+            { nombrePaciente: Like(`%${term}%`) }
+            ],
+        });
+    }
+
+    async findByHash(hash) {
+        return await this.folioRepository.findOne({ where: { hash } });
     }
 
     async generateFolio() {
