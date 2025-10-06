@@ -362,7 +362,8 @@ async function handleSubmit(e) {
         // Mostrar éxito
         showSuccess();
         initFoliosTable();
-        resetForm();
+        toggleSubmitButton(false);
+        // resetForm();
     } catch (error) {
         console.error('Error al generar PDF:', error);
         showErrorMessage(error.message || 'Error al generar el PDF. Verifique la conexión con el servidor.');
@@ -465,6 +466,19 @@ function setupFormValidation() {
     // Validación inicial
     validateForm();
 }
+function toggleSubmitButton(enabled) {
+    if (submitBtn) {
+        submitBtn.disabled = !enabled;
+
+        if (enabled) {
+            submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
+        } else {
+            submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
+            submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        }
+    }
+}
 
 // Validar formulario completo
 function validateForm() {
@@ -476,17 +490,7 @@ function validateForm() {
 
     const isValid = fecha && nombreTitular && nombrePaciente && tipoUsuario && relacionPaciente;
 
-    if (submitBtn) {
-        submitBtn.disabled = !isValid;
-
-        if (isValid) {
-            submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-            submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
-        } else {
-            submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'cursor-pointer');
-            submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        }
-    }
+    toggleSubmitButton(isValid);
 
     return isValid;
 }
