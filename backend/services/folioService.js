@@ -15,6 +15,61 @@ class FolioService {
         });
     }
 
+    async filterFolios(data){
+        const { fechaInicio, fechaFin, page, size, tipoPaciente, tipoPersona, tipoAtencion, status } = data;
+        const query = this.folioRepository.createQueryBuilder('folio');
+
+        if (fechaInicio != null && fechaInicio !== '') {
+            query.andWhere('folio.fecha >= :fechaInicio', { fechaInicio });
+        }
+        if (fechaFin != null && fechaFin !== '') {
+            query.andWhere('folio.fecha <= :fechaFin', { fechaFin });
+        }
+        if (tipoPaciente != null && tipoPaciente !== '') {
+            query.andWhere('folio.tipoPaciente = :tipoPaciente', { tipoPaciente });
+        }
+        if (tipoPersona != null && tipoPersona !== '') {
+            query.andWhere('folio.tipoPersona = :tipoPersona', { tipoPersona });
+        }
+        
+        if (tipoAtencion != null && tipoAtencion !== '') {
+            query.andWhere('folio.tipoAtencion = :tipoAtencion', { tipoAtencion });
+        }
+        if (status != null && status !== '') {
+            if (status === 'active') {
+                query.andWhere('folio.fechaDesactivacion IS NULL');
+            } else if (status === 'deactivated') {
+                query.andWhere('folio.fechaDesactivacion IS NOT NULL');
+            }
+        }
+
+        query.orderBy('folio.createdAt', 'DESC');
+
+        const skip = (page - 1) * size;
+        query.skip(skip).take(size);
+
+        return await query.getMany();
+    }
+
+    async findOneById(id) {
+        return await this.folioRepository.findOneBy({ id });
+    }
+
+    async update(id, data) {
+        const folio = await this.folioRepository.findOneBy({ id });
+        if (!folio) {
+            throw new Error('Folio no encontrado');
+        }
+        folio.fecha = data.fecha || folio.fecha;
+        folio.tipoPersona = data.tipoPersona || folio.tipoPersona;
+        folio.nombreTitular = data.nombreTitular || folio.nombreTitular;
+        folio.tipoPaciente = data.tipoPaciente || folio.tipoPaciente;
+        folio.nombrePaciente = data.nombrePaciente || folio.nombrePaciente;
+        folio.tipoAtencion = data.tipoAtencion || folio.tipoAtencion;
+        
+        return await this.folioRepository.save(folio);
+    }
+
     async search(term) {
         return await this.folioRepository.find({ 
             where: [
@@ -55,7 +110,8 @@ class FolioService {
             nombreTitular: data.nombreTitular,
             tipoPaciente: data.tipoPaciente,
             nombrePaciente: data.nombrePaciente,
-            usuarioRegistro: username
+            usuarioRegistro: username,
+            tipoAtencion: data.tipoAtencion
         });
         await this.folioRepository.save(newFolio);
     }

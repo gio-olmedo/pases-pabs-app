@@ -11,6 +11,18 @@ class FolioController {
         }
     }
 
+    static async updateFolio(req, res) {
+        const { id } = req.params;
+        const data = req.body;
+        try {
+            const updatedFolio = await foliosService.update(id, data);
+            res.json(updatedFolio);
+        } catch (error) {
+            console.error('Error updating folio:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
     static async search(req, res) {
         const { folio } = req.params;
         try {
@@ -46,6 +58,17 @@ class FolioController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    static async filterFolios(req, res) {
+        const filters = req.body;
+        try {
+            const folios = await foliosService.filterFolios(filters);
+            res.json(folios);
+        } catch (error) {
+            console.error('Error filtering folios:', error);
+            res.status(500).json({ error: 'Error filtering folios' });
+        }
+    }   
 }
 
 module.exports = { FolioController };

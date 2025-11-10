@@ -73,19 +73,43 @@ class PDFService {
         return doc;
     }
 
+    async regeneratePDF(id) {
+        const data = await this.folioService.findOneById(id);
+        if (!data) {
+            throw new Error('Folio not found');
+        }
+
+        return await this.generatePaseMedicov2({
+            folio: data.folio,
+            fecha: data.fecha,
+            tipoPersona: data.tipoPersona,
+            nombreTitular: data.nombreTitular,
+            tipoPaciente: data.tipoPaciente,
+            nombrePaciente: data.nombrePaciente,
+            tipoAtencion: data.tipoAtencion
+        }, data.usuarioRegistro);
+    }
+
     async generatePaseMedicov2(data, username) {
         this.validatePDFData(data);
-        const response = await foliosService.generateFolio();
         let auxHeight = 0;
+        let regenerate = true;
+        if(!data.folio){
+            regenerate = false;
+            const response = await foliosService.generateFolio();
+            data.folio = response.folio;
+            data.hash = response.hash;
+        }
 
         const datos = {
-            folio: response.folio,
-            hash: response.hash,
+            folio: data.folio,
+            hash: data.hash,
             fecha: data.fecha,
             esEmpleado: data.tipoPersona === 'empleado',
             nombreTitular: data.nombreTitular,
             tipoPaciente: data.tipoPaciente,
-            nombrePaciente: data.nombrePaciente
+            nombrePaciente: data.nombrePaciente,
+            tipoAtencion: data.tipoAtencion
         };
         const qr = await this.generarQR(datos.hash);
         // console.log('QR generado:', qr);
@@ -124,6 +148,9 @@ class PDFService {
         doc.fontSize(22).text('Pase Médico', 0, 18, { continued: false, align: 'center' });
         const subtitle = 'Titular: ' + (datos.nombreTitular || '');
         doc.fontSize(12).text(subtitle, 0, 46, { align: 'center' });
+
+        const tipoAtencionText = datos.tipoAtencion ? `Motivo: ${datos.tipoAtencion.toUpperCase().replace(/_/g, ' ')}` : '';
+        doc.fontSize(12).text(tipoAtencionText, 0, 64, { align: 'center' });
 
         // Número de folio en esquina derecha
         doc.fontSize(10).font('Helvetica');
@@ -197,7 +224,7 @@ class PDFService {
 
         // Finaliza
         // doc.end();
-        this.folioService.registerFolio(datos, username);
+        if (!regenerate) this.folioService.registerFolio(datos, username);
         return doc;
     }
 

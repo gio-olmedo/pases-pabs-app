@@ -6,5 +6,6 @@ const router = express.Router();
 
 // Ruta para generar PDF (requiere autenticación)
 router.post('/generate-pdf', authenticateToken, PDFController.generatePDF);
+router.post('/regenerate-pdf/:id', authenticateToken, PDFController.regeneratePDF);
 
 module.exports = router;

@@ -47,6 +47,11 @@ const Folios = new EntitySchema({
             nullable: true,
             default: null
         },
+        tipoAtencion: {
+            type: 'varchar',
+            length: 100,
+            nullable: true
+        },
         createdAt: {
             type: 'datetime',
             default: () => 'CURRENT_TIMESTAMP'
