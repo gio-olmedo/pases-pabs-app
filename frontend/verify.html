@@ -61,12 +61,26 @@
                     
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <div class="text-3xl font-bold text-blue-600 mb-1" id="folio-number"></div>
-                        <div class="text-gray-600" id="folio-date"></div>
+                        <!-- <div class="text-gray-600" id="folio-date"></div> -->
                     </div>
                 </div>
                 
                 <!-- Information Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <div class="text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar mr-2"></i>Fecha de Cita
+                        </div>
+                        <div class="text-lg text-gray-900" id="fecha"></div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <div class="text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-notes-medical mr-2"></i>Motivo de Visita
+                        </div>
+                        <div class="text-lg text-gray-900" id="motivo"></div>
+                    </div>
+
                     <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
                         <div class="text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-user-tag mr-2"></i>Tipo de Persona
@@ -101,7 +115,7 @@
                         </div>
                         <div class="text-lg text-gray-900" id="usuario-registro"></div>
                     </div>
-                    
+
                     <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
                         <div class="text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-calendar-plus mr-2"></i>Fecha de Creación
@@ -158,8 +172,6 @@
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
             });
         }
 
@@ -179,13 +191,15 @@
             
             // Llenar los datos
             document.getElementById('folio-number').textContent = folio.folio;
-            document.getElementById('folio-date').textContent = `Fecha: ${formatDate(folio.fecha)}`;
-            document.getElementById('tipo-persona').textContent = folio.tipoPersona;
+            // document.getElementById('folio-date').textContent = `Fecha: ${formatDate(folio.fecha)}`;
+            document.getElementById('tipo-persona').textContent = folio.tipoPersona ? folio.tipoPersona.toUpperCase() : 'N/A';
             document.getElementById('nombre-titular').textContent = folio.nombreTitular;
-            document.getElementById('tipo-paciente').textContent = folio.tipoPaciente;
+            document.getElementById('tipo-paciente').textContent = folio.tipoPaciente ? folio.tipoPaciente.toUpperCase() : 'N/A';
             document.getElementById('nombre-paciente').textContent = folio.nombrePaciente;
             document.getElementById('usuario-registro').textContent = folio.usuarioRegistro;
-            document.getElementById('created-at').textContent = formatDateTime(folio.createdAt);
+            document.getElementById('fecha').textContent = formatDate(folio.fecha);
+            document.getElementById('motivo').textContent = folio.tipoAtencion ? folio.tipoAtencion.toUpperCase().replace(/_/g, ' ') : 'N/A';
+            document.getElementById('created-at').textContent = formatDate(folio.createdAt);
             document.getElementById('hash-value').textContent = folio.hash;
 
             // Mostrar badge según el estado del folio

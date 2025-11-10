@@ -28,6 +28,18 @@ window.pasesApp = function () {
         totalRecords: 0,
         totalPages: 0,
 
+        // edit modal state
+        showEditModal: false,
+        editForm: {
+            id: null,
+            fecha: new Date().toISOString().split('T')[0],
+            tipoPersona: null,
+            nombreTitular: '',
+            tipoPaciente: null,
+            nombrePaciente: '',
+            tipoAtencion: null
+        },
+
         // form
         form: {
             fecha: new Date().toISOString().split('T')[0],
@@ -124,7 +136,7 @@ window.pasesApp = function () {
                     status: f.status,
                     page: f.page || 1,
                     size: f.size || 20,
-                    term : this.searchQuery && this.searchQuery.trim().length >= 1 ? this.searchQuery.trim() : undefined
+                    term: this.searchQuery && this.searchQuery.trim().length >= 1 ? this.searchQuery.trim() : undefined
                 }
 
                 const url = `/api/folios/filter`;
@@ -198,6 +210,133 @@ window.pasesApp = function () {
             await this.deactivateFolio(id);
         },
 
+        // Edit handlers
+        editFolio(id) {
+            const item = this.records.find(r => r.id === id);
+            if (!item) {
+                this.showErrorMessage('Registro no encontrado en la lista.');
+                return;
+            }
+            // populate edit form with current values
+            this.editForm.id = item.id;
+            this.editForm.fecha = item.fecha || new Date().toISOString().split('T')[0];
+            this.editForm.tipoPersona = item.tipoPersona || null;
+            this.editForm.nombreTitular = item.nombreTitular || '';
+            this.editForm.tipoPaciente = item.tipoPaciente || null;
+            this.editForm.nombrePaciente = item.nombrePaciente || '';
+            this.editForm.tipoAtencion = item.tipoAtencion || null;
+            this.showEditModal = true;
+        },
+
+        closeEditModal() {
+            this.showEditModal = false;
+            // reset edit form
+            this.editForm = {
+                id: null,
+                fecha: new Date().toISOString().split('T')[0],
+                tipoPersona: null,
+                nombreTitular: '',
+                tipoPaciente: null,
+                nombrePaciente: '',
+                tipoAtencion: null
+            };
+        },
+
+        async saveEdit() {
+            if (!this.editForm.id) return this.showErrorMessage('ID de folio inválido');
+            // basic validation
+            if (!this.editForm.fecha || !this.editForm.nombreTitular.trim() || !this.editForm.nombrePaciente.trim() || !this.editForm.tipoPersona || !this.editForm.tipoPaciente) {
+                return this.showErrorMessage('Complete todos los campos requeridos antes de guardar.');
+            }
+            this.loading = true;
+            try {
+                const payload = {
+                    fecha: this.editForm.fecha,
+                    tipoPersona: this.editForm.tipoPersona,
+                    nombreTitular: this.editForm.nombreTitular,
+                    tipoPaciente: this.editForm.tipoPaciente,
+                    nombrePaciente: this.editForm.nombrePaciente,
+                    tipoAtencion: this.editForm.tipoAtencion
+                };
+
+                const res = await fetch(`/api/folios/${this.editForm.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `Error al actualizar folio: ${res.status}`);
+                }
+
+                const updated = await res.json();
+                // update local list
+                const idx = this.records.findIndex(r => r.id === updated.id || r.id === this.editForm.id);
+                if (idx !== -1) {
+                    this.records.splice(idx, 1, updated);
+                } else {
+                    // fallback: refresh table
+                    await this.initFoliosTable();
+                }
+
+                this.showToast("Registro modificado correctamente ✅", 'success');
+                this.closeEditModal();
+            } catch (err) {
+                console.error('Error al guardar edición:', err);
+                this.showErrorMessage(err.message || 'Error al guardar cambios');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        showToast(text, color) {
+            console.log('Mostrando toast:', text, color);
+            let style = {};
+            if(color === 'success') {
+                style = { background: "#38a169" };
+            } else if(color === 'error') {
+                style = { background: "#e53e3e" };
+            } else {
+                style = { background: "#718096" };
+            }
+            Toastify({
+                text: text,
+                duration: 3000,
+                close: false,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: style,
+            }).showToast();
+        },
+
+        async regeneratePDF(folioId) {
+            try {
+                const res = await fetch(`/api/regenerate-pdf/${folioId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                });
+                if (!res.ok) throw new Error('Error al regenerar PDF');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `pase-medico-regenerado-${folioId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                this.showToast("PDF regenerado correctamente ✅", 'success');
+            } catch (err) {
+                console.error('Error al regenerar PDF:', err);
+                this.showErrorMessage('Error al regenerar el PDF. Verifique la conexión con el servidor.');
+            }
+        },
+
         async deactivateFolio(folioId) {
             try {
                 const res = await fetch(`/api/folios/deactivate/${folioId}`, {
@@ -206,7 +345,7 @@ window.pasesApp = function () {
                 });
                 if (!res.ok) throw new Error('Error al desactivar folio');
                 await this.handleSearch();
-                this.showSuccess();
+                this.showToast("Registro eliminado 👤", 'error');
             } catch (err) {
                 console.error('Error al desactivar folio:', err);
                 this.showErrorMessage('Error al desactivar folio. Verifique la conexión con el servidor.');
@@ -300,6 +439,7 @@ window.pasesApp = function () {
                 document.body.removeChild(a);
 
                 this.showSuccess();
+                this.resetForm();
                 await this.initFoliosTable();
             } catch (err) {
                 console.error('Error al generar PDF:', err);
@@ -334,7 +474,8 @@ window.pasesApp = function () {
                 tipoUsuario: null,
                 nombreTitular: '',
                 relacionPaciente: null,
-                nombrePaciente: ''
+                nombrePaciente: '',
+                tipoAtencion: null
             };
             this.hideMessages();
         },
