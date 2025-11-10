@@ -276,7 +276,8 @@ window.pasesApp = function () {
                     tipoPersona: this.form.tipoUsuario,
                     nombreTitular: this.form.nombreTitular,
                     tipoPaciente: this.form.relacionPaciente,
-                    nombrePaciente: this.form.nombrePaciente
+                    nombrePaciente: this.form.nombrePaciente,
+                    tipoAtencion: this.form.tipoAtencion
                 };
 
                 const res = await fetch('/api/generate-pdf', {
