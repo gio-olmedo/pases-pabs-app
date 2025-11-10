@@ -23,7 +23,7 @@ window.pasesApp = function () {
             tipoPaciente: '',
             tipoPersona: '',
             tipoAtencion: '',
-            status: ''
+            status: 'active'
         },
         totalRecords: 0,
         totalPages: 0,
