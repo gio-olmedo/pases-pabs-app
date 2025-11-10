@@ -24,14 +24,12 @@
             <form id="loginForm" class="space-y-4" x-on:submit.prevent="handleLogin">
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                    <input type="text" id="username" name="username" required
-                    x-model="login.username"
+                    <input type="text" id="username" name="username" required x-model="login.username"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" id="password" name="password" required
-                    x-model="login.password"
+                    <input type="password" id="password" name="password" required x-model="login.password"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <button type="submit"
@@ -39,7 +37,8 @@
                     <i class="fas fa-sign-in-alt mr-2"></i>Ingresar
                 </button>
             </form>
-            <div id="loginError" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded" x-show="loginError" x-transition>
+            <div id="loginError" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
+                x-show="loginError" x-transition>
                 <i class="fas fa-exclamation-triangle mr-2"></i>
                 <span>Credenciales incorrectas. Intente nuevamente.</span>
             </div>
@@ -75,57 +74,130 @@
         </header>
 
         <!-- TOP 20 users -->
-    <div id="listUsersSection" class="" x-show="showList" x-transition>
+        <div id="listUsersSection" class="" x-show="showList" x-transition>
             <section class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <h1 class="text-2xl font-bold my-4">Registros de Pases Médicos</h1>
                 <div class="mb-4 flex items-left">
                     <input type="text" id="searchInput" placeholder="Buscar por nombre del paciente o folio..."
                         class="w-80 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        x-model.debounce="searchQuery" x-on:input.debounce="handleSearch" />
-                    <!-- <button id="searchBtn"
-                        class="ml-2 bg-blue-300 text-gray-700 py-2 px-4 rounded-md hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-                        <i class="fas fa-search mr-2"></i>Buscar
-                    </button> -->
+                        x-model.debounce="searchQuery"
+                        x-on:input.debounce="handleSearch" />
                     <button id="clearSearchBtn" x-on:click.prevent="handleClearSearch()"
                         class="ml-2 bg-red-300 text-gray-700 py-2 px-4 rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200">
                         <i class="fas fa-times mr-2"></i>Limpiar
                     </button>
                 </div>
+
+                <!-- Filters -->
+                <div class="flex items-center space-x-2 pb-6" x-on:change="applyFilters()">
+                    <input type="date" id="fechaInicio" placeholder="Fecha inicio" x-model="filters.fechaInicio"
+                        class="px-2 py-1 border border-gray-300 rounded-md" />
+                    <input type="date" id="fechaFin" placeholder="Fecha fin" x-model="filters.fechaFin"
+                        class="px-2 py-1 border border-gray-300 rounded-md" />
+                    <select x-model="filters.tipoPaciente" class="px-2 py-1 border border-gray-300 rounded-md">
+                        <option value="">Tipo Paciente</option>
+                        <option value="hijo">Hijo</option>
+                        <option value="esposo">Esposo(a)</option>
+                        <option value="beneficiario">Beneficiario</option>
+                    </select>
+                    <select x-model="filters.tipoPersona" class="px-2 py-1 border border-gray-300 rounded-md">
+                        <option value="">Afiliación</option>
+                        <option value="empleado">Empleado</option>
+                        <option value="cliente">Cliente</option>
+                    </select>
+                    <select x-model="filters.tipoAtencion" class="px-2 py-1 border border-gray-300 rounded-md">
+                        <option value="">Tipo Atención</option>
+                        <option value="consulta">Consulta</option>
+                        <option value="examen_medico">Examen médico</option>
+                        <option value="accidente">Accidente</option>
+                    </select>
+                    <select x-model="filters.status" class="px-2 py-1 border border-gray-300 rounded-md">
+                        <option value="">Estado</option>
+                        <option value="active">Activo</option>
+                        <option value="deactivated">Desactivado</option>
+                    </select>
+                    <button x-on:click.prevent="applyFilters()"
+                        class="ml-2 bg-blue-300 text-gray-700 py-1 px-3 rounded-md hover:bg-blue-400">Filtrar</button>
+                    <button x-on:click.prevent="clearFilters()"
+                        class="ml-1 bg-gray-200 text-gray-700 py-1 px-3 rounded-md hover:bg-gray-300">Limpiar
+                        filtros</button>
+                </div>
+                <!-- <button id="searchBtn"
+                        class="ml-2 bg-blue-300 text-gray-700 py-2 px-4 rounded-md hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                        <i class="fas fa-search mr-2"></i>Buscar
+                    </button> -->
+
+
                 <table class="min-w-full bg-white border border-gray-300">
                     <thead>
                         <tr>
-                            <th class="py-2 px-4 border-b">Folio</th>
-                            <th class="py-2 px-4 border-b">Tipo de Paciente</th>
-                            <th class="py-2 px-4 border-b">Nombre del Paciente</th>
-                            <th class="py-2 px-4 border-b">Nombre del Titular</th>
-                            <th class="py-2 px-4 border-b">Estado</th>
-                            <th class="py-2 px-4 border-b">Fecha</th>
-                            <th class="py-2 px-4 border-b">Acciones</th>
+                            <th class="py-2 px-2 border-b">Folio</th>
+                            <th class="py-2 px-2 border-b">Afiliación</th>
+                            <th class="py-2 px-2 border-b">Tipo de Paciente</th>
+                            <th class="py-2 px-2 border-b">Motivo</th>
+                            <th class="py-2 px-2 border-b">Nombre del Paciente</th>
+                            <th class="py-2 px-2 border-b">Nombre del Titular</th>
+                            <th class="py-2 px-2 border-b">Estado</th>
+                            <th class="py-2 px-2 border-b">Fecha</th>
+                            <th class="py-2 px-2 border-b">Acciones</th>
                         </tr>
                     </thead>
-                        <tbody id="recordsTableBody">
-                            <template x-for="folio in records" :key="folio.id">
-                                <tr class="bg-white border-b hover:bg-gray-50">
-                                    <td class="px-6 py-4" x-text="folio.folio"></td>
-                                    <td class="px-6 py-4" x-text="folio.tipoPaciente"></td>
-                                    <td class="px-6 py-4" x-text="folio.nombrePaciente"></td>
-                                    <td class="px-6 py-4" x-text="folio.nombreTitular"></td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-block px-2 py-1 text-xs font-semibold rounded" x-bind:class="!folio.fechaDesactivacion ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" x-text="!folio.fechaDesactivacion ? 'Activo' : 'Desactivado'"></span>
-                                    </td>
-                                    <td class="px-6 py-4" x-text="folio.fecha"></td>
-                                    <td class="px-6 py-4">
-                                        <button x-show="!folio.fechaDesactivacion" x-on:click.prevent="confirmDeactivate(folio.id)" class="deactivateBtn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded"><i class="fa-solid fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
+                    <tbody id="recordsTableBody">
+                        <template x-for="folio in records" :key="folio.id">
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-2 text-sm" x-text="folio.folio"></td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.tipoPersona ? folio.tipoPersona.toUpperCase() : ''"></td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.tipoPaciente ? folio.tipoPaciente.toUpperCase() : ''"></td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.tipoAtencion ? folio.tipoAtencion.toUpperCase().replace(/_/g, ' ') : ''"></td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.nombrePaciente"></td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.nombreTitular"></td>
+                                <td class="px-4 py-2">
+                                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded"
+                                        x-bind:class="!folio.fechaDesactivacion ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                        x-text="!folio.fechaDesactivacion ? 'Activo' : 'Desactivado'"></span>
+                                </td>
+                                <td class="px-4 py-2 text-sm" x-text="folio.fecha"></td>
+                                <td class="px-4 py-2 text-sm">
+                                    <button x-show="!folio.fechaDesactivacion"
+                                        x-on:click.prevent="confirmDeactivate(folio.id)"
+                                        class="deactivateBtn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded"><i
+                                            class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
                 </table>
+                <!-- Pagination controls -->
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button x-on:click.prevent="goToPage(1)" :disabled="filters.page <= 1"
+                            class="px-3 py-1 bg-gray-200 rounded">Primera</button>
+                        <button x-on:click.prevent="goToPage(filters.page - 1)" :disabled="filters.page <= 1"
+                            class="px-3 py-1 bg-gray-200 rounded">Anterior</button>
+                        <span>Pagina <strong x-text="filters.page"></strong> de <strong
+                                x-text="totalPages || 1"></strong></span>
+                        <button x-on:click.prevent="goToPage(filters.page + 1)" :disabled="filters.page >= totalPages"
+                            class="px-3 py-1 bg-gray-200 rounded">Siguiente</button>
+                        <button x-on:click.prevent="goToPage(totalPages)" :disabled="filters.page >= totalPages"
+                            class="px-3 py-1 bg-gray-200 rounded">Última</button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm">Tamaño:</label>
+                        <select x-model.number="filters.size" x-on:change="changePageSize()"
+                            class="px-2 py-1 border border-gray-300 rounded-md">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="text-sm text-gray-600">Total registros: <strong
+                                x-text="totalRecords || records.length"></strong></span>
+                    </div>
+                </div>
             </section>
         </div>
 
         <!-- Main Content -->
-    <div id="formSection" class="" x-show="!showList" x-transition>
+        <div id="formSection" class="" x-show="!showList" x-transition>
             <main class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <div class="mb-6">
@@ -140,7 +212,8 @@
                             <label for="nombreTitular" class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class="fas fa-id-card mr-1"></i>Nombre Titular del Servicio
                             </label>
-                            <input type="text" id="nombreTitular" name="nombreTitular" required x-model="form.nombreTitular"
+                            <input type="text" id="nombreTitular" name="nombreTitular" required
+                                x-model="form.nombreTitular"
                                 x-on:input="form.nombreTitular = capitalizeWords(form.nombreTitular)"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Ingrese el nombre completo del titular">
@@ -162,8 +235,8 @@
                                 <label for="fecha" class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class="fas fa-calendar mr-1"></i>Fecha
                                 </label>
-                    <input type="date" id="fecha" name="fecha" required x-model="form.fecha"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="date" id="fecha" name="fecha" required x-model="form.fecha"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                         </div>
 
@@ -174,12 +247,14 @@
                             </label>
                             <div class="flex space-x-6">
                                 <label class="flex items-center">
-                        <input type="radio" name="tipoUsuario" value="empleado" required x-model="form.tipoUsuario"
-                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                    <input type="radio" name="tipoUsuario" value="empleado" required
+                                        x-model="form.tipoUsuario"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                     <span class="ml-2 text-sm text-gray-700">Empleado</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="radio" name="tipoUsuario" value="cliente" required x-model="form.tipoUsuario"
+                                    <input type="radio" name="tipoUsuario" value="cliente" required
+                                        x-model="form.tipoUsuario"
                                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                     <span class="ml-2 text-sm text-gray-700">Cliente</span>
                                 </label>
@@ -194,7 +269,8 @@
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <label
                                     class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                                    <input type="radio" name="relacionPaciente" value="hijo" required x-model="form.relacionPaciente"
+                                    <input type="radio" name="relacionPaciente" value="hijo" required
+                                        x-model="form.relacionPaciente"
                                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                     <span class="ml-3 text-sm text-gray-700">
                                         <i class="fas fa-child mr-2 text-blue-500"></i>Hijo
@@ -202,7 +278,8 @@
                                 </label>
                                 <label
                                     class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                                    <input type="radio" name="relacionPaciente" value="esposo" required x-model="form.relacionPaciente"
+                                    <input type="radio" name="relacionPaciente" value="esposo" required
+                                        x-model="form.relacionPaciente"
                                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                     <span class="ml-3 text-sm text-gray-700">
                                         <i class="fas fa-heart mr-2 text-red-500"></i>Esposo(a)
@@ -210,7 +287,8 @@
                                 </label>
                                 <label
                                     class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                                    <input type="radio" name="relacionPaciente" value="beneficiario" required x-model="form.relacionPaciente"
+                                    <input type="radio" name="relacionPaciente" value="beneficiario" required
+                                        x-model="form.relacionPaciente"
                                         class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                     <span class="ml-3 text-sm text-gray-700">
                                         <i class="fas fa-user-plus mr-2 text-green-500"></i>Beneficiario
@@ -224,7 +302,8 @@
                             <label for="nombrePaciente" class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class="fas fa-user-injured mr-1"></i>Nombre del Paciente
                             </label>
-                            <input type="text" id="nombrePaciente" name="nombrePaciente" required x-model="form.nombrePaciente"
+                            <input type="text" id="nombrePaciente" name="nombrePaciente" required
+                                x-model="form.nombrePaciente"
                                 x-on:input="form.nombrePaciente = capitalizeWords(form.nombrePaciente)"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Ingrese el nombre completo del paciente">
@@ -237,8 +316,7 @@
                                 class="py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition duration-200 font-medium">
                                 <i class="fas fa-file-pdf mr-2"></i>Generar PDF
                             </button>
-                            <button type="button" id="resetForm"
-                                x-on:click="resetForm()"
+                            <button type="button" id="resetForm" x-on:click="resetForm()"
                                 class="flex-1 sm:flex-none bg-gray-300 text-gray-700 py-3 px-6 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200 font-medium">
                                 <i class="fas fa-undo mr-2"></i>Limpiar
                             </button>
@@ -253,14 +331,15 @@
 
                     <!-- Success Message -->
                     <div id="successMessage"
-                        class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md" x-show="successMessage" x-transition>
+                        class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md"
+                        x-show="successMessage" x-transition>
                         <i class="fas fa-check-circle mr-2"></i>
                         <span>PDF generado exitosamente. La descarga comenzará automáticamente.</span>
                     </div>
 
                     <!-- Error Message -->
-                    <div id="errorMessage"
-                        class="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md" x-show="errorMessage" x-transition>
+                    <div id="errorMessage" class="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md"
+                        x-show="errorMessage" x-transition>
                         <i class="fas fa-exclamation-triangle mr-2"></i>
                         <span id="errorText" x-text="errorText">Error al generar el PDF. Intente nuevamente.</span>
                     </div>

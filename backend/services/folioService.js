@@ -16,8 +16,13 @@ class FolioService {
     }
 
     async filterFolios(data){
-        const { fechaInicio, fechaFin, page, size, tipoPaciente, tipoPersona, tipoAtencion, status } = data;
+        const { fechaInicio, fechaFin, page, size, tipoPaciente, tipoPersona, tipoAtencion, status, term } = data;
         const query = this.folioRepository.createQueryBuilder('folio');
+
+        if (term != null && term !== '') {
+            query.andWhere('(folio.folio LIKE :term OR folio.hash = :exactTerm OR folio.nombreTitular LIKE :term OR folio.nombrePaciente LIKE :term)', 
+            { term: `%${term}%`, exactTerm: term });
+        }
 
         if (fechaInicio != null && fechaInicio !== '') {
             query.andWhere('folio.fecha >= :fechaInicio', { fechaInicio });
@@ -48,7 +53,10 @@ class FolioService {
         const skip = (page - 1) * size;
         query.skip(skip).take(size);
 
-        return await query.getMany();
+        return {
+            total: await query.getCount(),
+            data: await query.getMany()
+        }
     }
 
     async findOneById(id) {
